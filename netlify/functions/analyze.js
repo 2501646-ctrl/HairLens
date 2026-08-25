@@ -59,6 +59,7 @@ Be specific to what is actually visible in the image. If the image does not clea
 
     if (!response.ok) {
       const errText = await response.text();
+      console.error("Gemini API error:", response.status, errText);
       return { statusCode: response.status, body: JSON.stringify({ error: "Gemini request failed", detail: errText }) };
     }
 
@@ -79,6 +80,7 @@ Be specific to what is actually visible in the image. If the image does not clea
       body: JSON.stringify(parsed),
     };
   } catch (err) {
+    console.error("Unexpected server error:", err);
     return { statusCode: 500, body: JSON.stringify({ error: "Unexpected server error", detail: String(err) }) };
   }
 };
