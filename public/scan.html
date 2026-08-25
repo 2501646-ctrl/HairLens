@@ -313,7 +313,8 @@
       loadingWrap.style.display = 'none';
 
       if (!res.ok) {
-        errorText.textContent = data.error || 'Something went wrong. Please try again.';
+        const detail = data.detail ? ` (${String(data.detail).slice(0, 200)})` : '';
+        errorText.textContent = (data.error || 'Something went wrong. Please try again.') + detail;
         errorWrap.style.display = 'block';
         previewWrap.style.display = 'block';
         return;
