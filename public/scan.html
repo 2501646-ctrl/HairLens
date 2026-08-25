@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scan — HairLens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,400&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ivory:#FAF6F1;
+    --surface:#FFFFFF;
+    --ink:#2B2420;
+    --ink-soft:#5C5248;
+    --caramel:#B08968;
+    --caramel-deep:#8C6644;
+    --blush:#E8C4C4;
+    --line:rgba(43,36,32,0.10);
+    --good:#7A8C6E;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--ivory);color:var(--ink);
+    font-family:'Sora',sans-serif;line-height:1.6;min-height:100vh;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:720px;margin:0 auto;padding:0 32px;}
+
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(250,246,241,0.85);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{max-width:1080px;display:flex;align-items:center;justify-content:space-between;height:76px;}
+  .logo{font-family:'Fraunces',serif;font-size:22px;font-weight:600;display:flex;align-items:center;gap:8px;}
+  .logo .dot{width:8px;height:8px;border-radius:50%;background:var(--caramel);display:inline-block;}
+  .back{font-size:14px;color:var(--ink-soft);}
+  .back:hover{color:var(--ink);}
+
+  main{padding:72px 0 100px;}
+  .head{text-align:center;margin-bottom:48px;}
+  .eyebrow{
+    font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--caramel-deep);margin-bottom:16px;
+  }
+  .head h1{font-size:clamp(28px,4.5vw,38px);margin-bottom:12px;}
+  .head p{color:var(--ink-soft);font-size:16px;}
+
+  /* UPLOAD ZONE */
+  .dropzone{
+    border:1.5px dashed var(--line);
+    border-radius:24px;
+    background:var(--surface);
+    padding:56px 32px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .25s ease, background .25s ease;
+    position:relative;
+  }
+  .dropzone.dragover{border-color:var(--caramel);background:#FFFDFB;}
+  .dropzone input{display:none;}
+  .dz-icon{width:52px;height:52px;margin:0 auto 20px;color:var(--caramel);}
+  .dropzone h3{font-size:18px;margin-bottom:8px;font-weight:500;}
+  .dropzone p{font-size:14px;color:var(--ink-soft);}
+
+  .preview-wrap{display:none;text-align:center;}
+  .preview-wrap img{
+    max-width:280px;max-height:280px;border-radius:20px;
+    box-shadow:0 12px 32px rgba(43,36,32,0.12);
+    margin-bottom:24px;
+  }
+  .btn-row{display:flex;gap:12px;justify-content:center;}
+  .btn{
+    padding:14px 28px;border-radius:100px;border:none;cursor:pointer;
+    font-family:'Sora',sans-serif;font-size:15px;font-weight:500;
+    transition:background .25s ease, transform .25s ease;
+  }
+  .btn-primary{background:var(--ink);color:var(--ivory);}
+  .btn-primary:hover{background:var(--caramel-deep);transform:translateY(-1px);}
+  .btn-secondary{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-secondary:hover{border-color:var(--ink-soft);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+  .btn:focus-visible{outline:2px solid var(--caramel-deep);outline-offset:2px;}
+
+  /* LOADING */
+  .loading-wrap{display:none;text-align:center;padding:40px 0;}
+  .spinner{
+    width:44px;height:44px;margin:0 auto 24px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    border-top-color:var(--caramel);
+    animation:spin 0.9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-wrap p{color:var(--ink-soft);font-size:15px;}
+
+  /* ERROR */
+  .error-wrap{display:none;text-align:center;padding:24px;background:#FBEEEE;border-radius:16px;margin-top:20px;}
+  .error-wrap p{color:#8C4A44;font-size:14px;}
+
+  /* RESULTS */
+  .results{display:none;}
+  .score-card{
+    background:var(--surface);border-radius:24px;padding:40px;text-align:center;
+    margin-bottom:24px;box-shadow:0 8px 28px rgba(43,36,32,0.06);
+  }
+  .score-ring{position:relative;width:140px;height:140px;margin:0 auto 20px;}
+  .score-ring svg{transform:rotate(-90deg);width:100%;height:100%;}
+  .score-ring circle{fill:none;stroke-width:8;}
+  .score-bg{stroke:var(--line);}
+  .score-fg{stroke:var(--caramel);stroke-linecap:round;transition:stroke-dashoffset 1.2s cubic-bezier(.16,1,.3,1);}
+  .score-num{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .score-num .num{font-family:'Fraunces',serif;font-size:34px;font-weight:600;}
+  .score-num .label{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.06em;}
+  .summary-text{color:var(--ink-soft);font-size:15px;max-width:440px;margin:0 auto;}
+
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .detail-card{
+    background:var(--surface);border-radius:20px;padding:26px;
+    box-shadow:0 8px 28px rgba(43,36,32,0.06);
+  }
+  .detail-card .dc-label{
+    font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
+    color:var(--caramel-deep);margin-bottom:10px;
+  }
+  .detail-card .dc-value{font-size:16px;font-weight:500;}
+
+  .rec-card{
+    background:var(--surface);border-radius:20px;padding:30px;
+    box-shadow:0 8px 28px rgba(43,36,32,0.06);margin-bottom:24px;
+  }
+  .rec-card .dc-label{
+    font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
+    color:var(--caramel-deep);margin-bottom:16px;
+  }
+  .rec-list{list-style:none;}
+  .rec-list li{
+    display:flex;gap:12px;font-size:15px;padding:10px 0;
+    border-top:1px solid var(--line);
+  }
+  .rec-list li:first-child{border-top:none;}
+  .rec-list li::before{content:'—';color:var(--caramel);flex-shrink:0;}
+
+  .results .btn-row{margin-top:8px;}
+
+  @media (max-width:520px){
+    .detail-grid{grid-template-columns:1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo"><span class="dot"></span>HairLens</div>
+    <a href="index.html" class="back">← Back</a>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap">
+    <div class="head">
+      <div class="eyebrow">Free scan</div>
+      <h1>Upload a photo of your hair or scalp</h1>
+      <p>Clear, well-lit photos give the most accurate read.</p>
+    </div>
+
+    <!-- Upload -->
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="image/*">
+      <svg class="dz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 16V4m0 0L7 9m5-5l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 16v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h3>Drop a photo here, or click to choose</h3>
+      <p>JPG or PNG, up to 8MB</p>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-wrap" id="previewWrap">
+      <img id="previewImg" alt="Uploaded preview">
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="retakeBtn">Choose different photo</button>
+        <button class="btn btn-primary" id="analyzeBtn">Analyze my hair</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-wrap" id="loadingWrap">
+      <div class="spinner"></div>
+      <p>Reading texture, scalp, and condition…</p>
+    </div>
+
+    <!-- Error -->
+    <div class="error-wrap" id="errorWrap">
+      <p id="errorText">Something went wrong. Please try again.</p>
+    </div>
+
+    <!-- Results -->
+    <div class="results" id="results">
+      <div class="score-card">
+        <div class="score-ring">
+          <svg viewBox="0 0 140 140">
+            <circle class="score-bg" cx="70" cy="70" r="60"/>
+            <circle class="score-fg" id="scoreCircle" cx="70" cy="70" r="60" stroke-dasharray="377" stroke-dashoffset="377"/>
+          </svg>
+          <div class="score-num">
+            <span class="num" id="scoreNum">0</span>
+            <span class="label">Health score</span>
+          </div>
+        </div>
+        <p class="summary-text" id="summaryText"></p>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-card">
+          <div class="dc-label">Hair type</div>
+          <div class="dc-value" id="hairTypeText"></div>
+        </div>
+        <div class="detail-card">
+          <div class="dc-label">Scalp condition</div>
+          <div class="dc-value" id="scalpText"></div>
+        </div>
+      </div>
+
+      <div class="rec-card">
+        <div class="dc-label">Recommendations</div>
+        <ul class="rec-list" id="recList"></ul>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="scanAgainBtn">Scan another photo</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const previewWrap = document.getElementById('previewWrap');
+  const previewImg = document.getElementById('previewImg');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const retakeBtn = document.getElementById('retakeBtn');
+  const loadingWrap = document.getElementById('loadingWrap');
+  const errorWrap = document.getElementById('errorWrap');
+  const errorText = document.getElementById('errorText');
+  const results = document.getElementById('results');
+  const scanAgainBtn = document.getElementById('scanAgainBtn');
+
+  let currentBase64 = null;
+  let currentMime = null;
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file.type.startsWith('image/')) return;
+    currentMime = file.type;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target.result;
+      currentBase64 = result.split(',')[1];
+      previewImg.src = result;
+      dropzone.style.display = 'none';
+      previewWrap.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  retakeBtn.addEventListener('click', () => {
+    previewWrap.style.display = 'none';
+    dropzone.style.display = 'block';
+    fileInput.value = '';
+  });
+
+  scanAgainBtn.addEventListener('click', () => {
+    results.style.display = 'none';
+    dropzone.style.display = 'block';
+    fileInput.value = '';
+    currentBase64 = null;
+  });
+
+  analyzeBtn.addEventListener('click', async () => {
+    if (!currentBase64) return;
+    previewWrap.style.display = 'none';
+    errorWrap.style.display = 'none';
+    loadingWrap.style.display = 'block';
+
+    try {
+      const res = await fetch('/.netlify/functions/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: currentBase64, mimeType: currentMime }),
+      });
+
+      const data = await res.json();
+      loadingWrap.style.display = 'none';
+
+      if (!res.ok) {
+        errorText.textContent = data.error || 'Something went wrong. Please try again.';
+        errorWrap.style.display = 'block';
+        previewWrap.style.display = 'block';
+        return;
+      }
+
+      renderResults(data);
+    } catch (err) {
+      loadingWrap.style.display = 'none';
+      errorText.textContent = 'Could not reach the server. Check your connection and try again.';
+      errorWrap.style.display = 'block';
+      previewWrap.style.display = 'block';
+    }
+  });
+
+  function renderResults(data) {
+    document.getElementById('scoreNum').textContent = data.healthScore ?? '—';
+    document.getElementById('summaryText').textContent = data.summary || '';
+    document.getElementById('hairTypeText').textContent = data.hairType || '—';
+    document.getElementById('scalpText').textContent = data.scalpCondition || '—';
+
+    const recList = document.getElementById('recList');
+    recList.innerHTML = '';
+    (data.recommendations || []).forEach((rec) => {
+      const li = document.createElement('li');
+      li.textContent = rec;
+      recList.appendChild(li);
+    });
+
+    results.style.display = 'block';
+
+    const circumference = 377;
+    const score = Math.max(0, Math.min(100, data.healthScore || 0));
+    const offset = circumference - (score / 100) * circumference;
+    requestAnimationFrame(() => {
+      document.getElementById('scoreCircle').style.strokeDashoffset = offset;
+    });
+  }
+</script>
+
+</body>
+</html>
