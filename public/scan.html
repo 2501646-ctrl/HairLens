@@ -173,13 +173,18 @@
 
     <!-- Upload -->
     <div class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" accept="image/*" capture="environment">
+      <input type="file" id="fileInput" accept="image/*">
+      <input type="file" id="cameraInput" accept="image/*" capture="environment">
       <svg class="dz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M12 16V4m0 0L7 9m5-5l5 5" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M20 16v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <h3>Drop a photo here, or click to choose</h3>
+      <h3>Choose how to add your photo</h3>
       <p>JPG or PNG, up to 8MB</p>
+      <div class="btn-row" style="margin-top:24px;" id="uploadChoiceBtns">
+        <button type="button" class="btn btn-secondary" id="uploadBtn">Upload a photo</button>
+        <button type="button" class="btn btn-primary" id="cameraBtn">Take a photo</button>
+      </div>
     </div>
 
     <!-- Preview -->
@@ -244,6 +249,9 @@
 <script>
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
+  const cameraInput = document.getElementById('cameraInput');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const cameraBtn = document.getElementById('cameraBtn');
   const previewWrap = document.getElementById('previewWrap');
   const previewImg = document.getElementById('previewImg');
   const analyzeBtn = document.getElementById('analyzeBtn');
@@ -257,7 +265,8 @@
   let currentBase64 = null;
   let currentMime = null;
 
-  dropzone.addEventListener('click', () => fileInput.click());
+  uploadBtn.addEventListener('click', () => fileInput.click());
+  cameraBtn.addEventListener('click', () => cameraInput.click());
   dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
   dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
   dropzone.addEventListener('drop', (e) => {
@@ -267,6 +276,9 @@
   });
   fileInput.addEventListener('change', () => {
     if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+  cameraInput.addEventListener('change', () => {
+    if (cameraInput.files[0]) handleFile(cameraInput.files[0]);
   });
 
   function handleFile(file) {
